@@ -6,7 +6,7 @@ defmodule QueueConsumer.Queue do
   @typedoc "Implementation specific options"
   @type opts :: Keyword.t()
 
-  @doc "Pop a message off the queue"
+  @doc "Get messages from the queue"
   @callback dequeue(opts) :: {:ok, [message]} | {:error, term}
 
   @doc "Mark a consumed message as done/processed/complete"

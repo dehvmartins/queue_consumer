@@ -4,12 +4,10 @@ defmodule QueueConsumer.Producer do
   require Logger
 
   def start_link(args) do
-    GenStage.start_link(__MODULE__, args, name: __MODULE__)
+    GenStage.start_link(__MODULE__, args, name: QueueConsumer.name(args[:name], :producer))
   end
 
   def init(args) do
-    IO.inspect(args)
-
     state = %{
       demand: 0,
       queue: Keyword.get(args, :queue_mod),
@@ -41,9 +39,6 @@ defmodule QueueConsumer.Producer do
       case state.queue.dequeue(opts) do
         {:ok, msgs} ->
           msgs
-
-        {:error, :empty_queue} ->
-          []
 
         {:error, reason} ->
           Logger.warn("error fetching messages from queue\n#{inspect(reason)}")

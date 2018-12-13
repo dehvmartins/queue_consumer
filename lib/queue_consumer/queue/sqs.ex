@@ -1,56 +1,66 @@
 defmodule QueueConsumer.Queue.Sqs do
+  @moduledoc """
+  AWS [SQS](https://aws.amazon.com/sqs/) Adapter
+
+  By default, it uses [long polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html) to minimize requests, but this is configurable via the `:wait_time_seconds` option.
+
+  This adapter uses [ExAws](https://github.com/ex-aws/ex_aws) and [ExAws.Sqs](https://github.com/ex-aws/ex_aws_sqs) to interact with SQS.
+
+  Be sure to configure ExAws either via AWS standard `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables or in your application's config:
+  ```
+  config :ex_aws,
+    access_key_id: MY_AWS_KEY,
+    secret_access_key: MY_AWS_SECRET
+  ```
+  See [ExAws](https://github.com/ex-aws/ex_aws) for all configuration options.
+
+  ## Options:
+    - :queue_name -- name of the SQS queue
+    - :visibility_timeout -- (Optional) See [SQS Developer Guide](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html), defaults to `180` seconds
+    - :wait_time_seconds -- (Optional) See [SQS Developer Guide](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html), defaults to `20`
+    - :max_number_of_messages -- (Optional) maximum number of messages to get on each request, defaults to `1`, SQS has a hard limit of 10 messages at a time.
+  """
+
   @behaviour QueueConsumer.Queue
+
+  @type opts :: [
+          queue_name: binary,
+          visibility_timeout: non_neg_integer,
+          max_number_of_message: pos_integer,
+          wait_time_seconds: non_neg_integer
+        ]
 
   alias ExAws.SQS
 
   require Logger
 
+  @aws_mod Application.get_env(:queue_consumer, :aws_mod, ExAws)
   @max_batch_size 10
 
   @impl true
   def dequeue(args) do
-    timeout = args[:visibility_timeout] || 180
-    num_messages = args[:max_number_of_messages] || 1
-    Logger.info("requesting messages from SQS")
+    Logger.debug("requesting messages from SQS")
 
-    SQS.receive_message(
-      args[:queue_name],
-      visibility_timeout: timeout,
-      wait_time_seconds: 20,
-      max_number_of_messages: num_messages
-    )
-    |> ExAws.request()
-    |> case do
-      {:ok, %{body: %{messages: [_ | _] = msgs}}} ->
-        out = Enum.map(msgs, &extract_msg/1)
-        {:ok, out}
+    opts = [
+      visibility_timeout: args[:visibility_timeout] || 180,
+      wait_time_seconds: Keyword.get(args, :wait_time_seconds, 20),
+      max_number_of_messages: min(args[:max_number_of_messages] || 1, @max_batch_size)
+    ]
 
-      {:ok, %{body: %{messages: []}}} ->
-        Logger.info("#{args[:queue_name]} queue is empty")
-        {:error, :empty_queue}
-
-      {:error, reason} ->
-        {:error, reason}
+    with request <- SQS.receive_message(args[:queue_name], opts),
+         {:ok, %{body: %{messages: msgs}}} when is_list(msgs) <- @aws_mod.request(request) do
+      {:ok, Enum.map(msgs, &extract_msg/1)}
     end
   end
 
   @impl true
-  def mark_as_done(receipt_handle, queue_name: queue_name) do
-    SQS.delete_message(queue_name, receipt_handle)
-    |> ExAws.request()
-    |> case do
-      {:ok, %{body: %{request_id: _}}} ->
-        {:ok, true}
-
-      {:error, reason} ->
-        {:error, reason}
+  def mark_as_done(receipt_handle, opts) do
+    with queue_name when is_binary(queue_name) <- Keyword.get(opts, :queue_name),
+         request <- SQS.delete_message(queue_name, receipt_handle),
+         {:ok, %{body: %{request_id: _}}} <- @aws_mod.request(request) do
+      {:ok, true}
     end
   end
 
   defp extract_msg(%{body: msg, receipt_handle: id}), do: {id, msg}
-
-  defp extract_msg(msg) do
-    Logger.warn("got invalid message #{inspect(msg)}")
-    {nil, nil}
-  end
 end

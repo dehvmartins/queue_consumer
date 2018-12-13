@@ -7,9 +7,21 @@ defmodule QueueConsumer.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      elixirc_paths: elixirc_paths(Mix.env()),
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.json": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
+
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
     [
@@ -24,8 +36,11 @@ defmodule QueueConsumer.MixProject do
       {:sweet_xml, "~> 0.6"},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.14"},
+      {:certifi, "~> 2.4"},
       {:excoveralls, "~> 0.8", only: :test},
-      {:mox, "~> 0.4.0", only: :test}
+      {:mox, "~> 0.4.0", only: :test},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0-rc.4", only: :dev, runtime: false}
     ]
   end
 end
