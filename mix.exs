@@ -4,6 +4,7 @@ defmodule QueueConsumer.MixProject do
   def project do
     [
       app: :queue_consumer,
+      package: package(),
       version: "0.1.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
@@ -40,8 +41,16 @@ defmodule QueueConsumer.MixProject do
       {:certifi, "~> 2.4"},
       {:excoveralls, "~> 0.8", only: :test},
       {:mox, "~> 0.4.0", only: :test},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.4", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Nico Piderman"],
+      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/sneako/queue_consumer"}
     ]
   end
 end

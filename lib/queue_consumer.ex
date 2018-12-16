@@ -81,6 +81,7 @@ defmodule QueueConsumer do
     |> List.flatten()
   end
 
+  @doc false
   def name(nil, type), do: type
   def name(name, type), do: String.to_atom("#{name}_#{type}")
 end
