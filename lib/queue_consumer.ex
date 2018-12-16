@@ -17,6 +17,16 @@ defmodule QueueConsumer do
   ]
   ```
 
+  ## Configuration
+  - :queues -- List of queue configurations
+  - :name -- (Optional) name for the top level supervisor
+
+  ### Queue Configuration
+  - :processor_mod -- The module name of your `QueueConsumer.Processor` behaviour implementation
+  - :queue_mod -- (Optional) The module name of the queue adapter you wish to use, defaults to `QueueConsumer.Queue.Sqs`
+  - :queue_opts -- (Optional) Keyword list of options specific to the queue adapter, defaults to `[]`
+  - :name -- (Optional) Name prefix for the Producer and ConsumerSupervisor. NOTE: This option is REQUIRED if you pass in more than one queue config, ie you want to consumer more than one queue.
+
   An example queue configuration for an SQS queue would look something like:
   ```
   queue_consumer_config = [
@@ -36,17 +46,28 @@ defmodule QueueConsumer do
   alias QueueConsumer.Producer
   alias QueueConsumer.Consumer
 
+  @type queue_config :: [
+          queue_mod: module(),
+          queue_opts: Keyword.t(),
+          processor_mod: module(),
+          name: atom()
+        ]
+
+  @type queue_consumer_opts :: [
+          name: atom(),
+          queues: [queue_config()]
+        ]
+
+  @spec start_link(queue_consumer_opts) :: {:ok, pid} | {:error, term} | :ignore
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: args[:name] || __MODULE__)
   end
 
   @impl true
   def init(args) do
-    opts = [strategy: :one_for_one, name: QueueConsumer.Supervisor]
-
     args
     |> children()
-    |> Supervisor.init(opts)
+    |> Supervisor.init([strategy: :one_for_one])
   end
 
   defp children(args) do

@@ -14,8 +14,46 @@ defmodule QueueConsumer.Queue.SqsTest do
 
   setup :verify_on_exit!
 
+  describe "enqueue/1" do
+    test "can send a message to SQS" do
+      message = "new message"
+
+      expected_request =
+        expected_request(
+          %{
+            "Action" => "SendMessage",
+            "MessageBody" => "new message",
+            "MaxNumberOfMessages" => 1,
+            "QueueName" => "fake-queue-name",
+            "VisibilityTimeout" => 30,
+            "WaitTimeSeconds" => 20
+          },
+          :send_message
+        )
+
+      response = %{
+        id: "778626b8-304f-4b01-b6ac-72e472f04778",
+        md5_of_message_attributes: "",
+        md5_of_message_body: "2e9252a4054b108edf3b3a10f5b63479",
+        message_id: "685a6b79-d4d6-4d36-9280-1fb394b0b660"
+      }
+
+      ExAwsMock
+      |> expect(:request, fn ^expected_request -> {:ok, %{body: response}} end)
+
+      assert {:ok, _} = Sqs.enqueue(message, @opts)
+    end
+
+    test "returns error tuple when request fails" do
+      ExAwsMock
+      |> expect(:request, fn _ -> {:error, :failed} end)
+
+      assert {:error, _} = Sqs.enqueue("meh", @opts)
+    end
+  end
+
   describe "dequeue/1" do
-    test "successful" do
+    test "can get a message from SQS" do
       message = "do work"
 
       ExAwsMock
@@ -24,14 +62,14 @@ defmodule QueueConsumer.Queue.SqsTest do
       assert {:ok, [{_handle, ^message}]} = Sqs.dequeue(@opts)
     end
 
-    test "empty queue" do
+    test "returns empty list when queue is empty" do
       ExAwsMock
       |> expect(:request, fn _ -> empty_dequeue_response() end)
 
       assert {:ok, []} = Sqs.dequeue(@opts)
     end
 
-    test "error" do
+    test "returns error tuple when request returns an error" do
       reason = "error response"
 
       ExAwsMock
@@ -42,14 +80,14 @@ defmodule QueueConsumer.Queue.SqsTest do
   end
 
   describe "mark_as_done/2" do
-    test "successful" do
+    test "sends delete message request to SSQS" do
       ExAwsMock
       |> expect(:request, fn _ -> mark_as_done_response() end)
 
       assert {:ok, true} = Sqs.mark_as_done("msg_id_123", @opts)
     end
 
-    test "error" do
+    test "returns error tuple when request returns an error" do
       reason = "error response"
 
       ExAwsMock
@@ -61,6 +99,16 @@ defmodule QueueConsumer.Queue.SqsTest do
 
   defp receipt_handle do
     "AQEB9u5RZZtQtAymrLlxcog/GfUdFQJmwkVZVas+zyLgFunKkxV4wX12ryR6D28u2IkuRashc1dq1TW3q+PDWXs19BvmPsFkch2YceXXlXfaf5Nywku11bhbOgGzVZ17NLuJZwAga3VDiUhyh7TOicV4LvTbUYpJfHvhlfc8dqN9YMhH3p5n2PAfd064FLpj8P/Yt8idIKXRW/0V7AXvLbipCJjKNPNEpeWi/jmPELQJvM7RZ1ZY2VqH7+A/NJcEqQzW4pJCivNPH5uIRtEPwptHM0WfHKhBTWMVBEc5omCLrgIs/ruQAe9JXEJw77DoWS8KomY+iNTL0Oovs6c0UaUwHP+6jx1uT+vfkYAT83tuoXc1ao3vzbCnmrxCPZptwPTTfFNQQ10NzQTziDkQnagC5Q=="
+  end
+
+  defp expected_request(params, action) do
+    %ExAws.Operation.Query{
+      action: action,
+      params: params,
+      parser: &ExAws.SQS.Parsers.parse/2,
+      path: "/#{@opts[:queue_name]}",
+      service: :sqs
+    }
   end
 
   defp dequeue_response(message) do

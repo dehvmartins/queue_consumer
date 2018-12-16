@@ -38,16 +38,26 @@ defmodule QueueConsumer.Queue.Sqs do
   @max_batch_size 10
 
   @impl true
-  def dequeue(args) do
+  def enqueue(msg, opts) do
+    with queue_name when is_binary(queue_name) <- Keyword.get(opts, :queue_name),
+         request <- SQS.send_message(queue_name, msg, opts),
+         {:ok, %{body: res}} <- @aws_mod.request(request) do
+      Logger.debug("enqueued 1 SQS message")
+      {:ok, res}
+    end
+  end
+
+  @impl true
+  def dequeue(opts) do
     Logger.debug("requesting messages from SQS")
 
-    opts = [
-      visibility_timeout: args[:visibility_timeout] || 180,
-      wait_time_seconds: Keyword.get(args, :wait_time_seconds, 20),
-      max_number_of_messages: min(args[:max_number_of_messages] || 1, @max_batch_size)
+    sqs_opts = [
+      visibility_timeout: opts[:visibility_timeout] || 180,
+      wait_time_seconds: Keyword.get(opts, :wait_time_seconds, 20),
+      max_number_of_messages: min(opts[:max_number_of_messages] || 1, @max_batch_size)
     ]
 
-    with request <- SQS.receive_message(args[:queue_name], opts),
+    with request <- SQS.receive_message(opts[:queue_name], sqs_opts),
          {:ok, %{body: %{messages: msgs}}} when is_list(msgs) <- @aws_mod.request(request) do
       {:ok, Enum.map(msgs, &extract_msg/1)}
     end

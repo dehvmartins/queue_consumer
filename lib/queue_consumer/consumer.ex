@@ -1,8 +1,5 @@
 defmodule QueueConsumer.Consumer do
-  @moduledoc """
-  A [ConsumerSupervisor](https://hexdocs.pm/gen_stage/ConsumerSupervisor.html) which spawns a task
-  for each message received from the configured queue.
-  """
+  @moduledoc false
   use ConsumerSupervisor
 
   def start_link(args) do
@@ -16,6 +13,7 @@ defmodule QueueConsumer.Consumer do
     queue_opts = Keyword.get(args, :queue_opts, [])
     processor = Keyword.get(args, :processor_mod)
     max_demand = Keyword.get(args, :max_demand, 10)
+    min_demand = Keyword.get(args, :min_demand, 1)
 
     children = [
       %{
@@ -28,7 +26,8 @@ defmodule QueueConsumer.Consumer do
     opts = [
       strategy: :one_for_one,
       subscribe_to: [
-        {QueueConsumer.name(args[:name], :queue_consumer_producer), max_demand: max_demand}
+        {QueueConsumer.name(args[:name], :queue_consumer_producer),
+         max_demand: max_demand, min_demand: min_demand}
       ]
     ]
 

@@ -1,4 +1,5 @@
 defmodule QueueConsumer.Producer do
+  @moduledoc false
   use GenStage
 
   require Logger

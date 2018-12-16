@@ -1,15 +1,20 @@
 defmodule QueueConsumer.Processor do
+  @moduledoc """
+  Implement this behaviour and reference the module's name in the queue config
+  when you start the `QueueConsumer`.
+  """
+
   @typedoc "An identifier, used to mark a job as complete"
-  @type message_id :: binary
+  @type message_id :: binary()
 
-  @type message_body :: binary
+  @type message_body :: binary()
 
-  @type message :: {message_id, message_body}
+  @type message :: {message_id(), message_body()}
 
   @typedoc "Queue adapter module"
-  @type queue :: atom
+  @type queue :: module()
 
-  @typedoc "Args specific to the queue implementation"
+  @typedoc "Options specific to the queue implementation"
   @type queue_opts :: Keyword.t()
 
   @doc """
@@ -28,5 +33,6 @@ defmodule QueueConsumer.Processor do
   end
   ```
   """
-  @callback start_link(queue, queue_opts, message) :: {:ok, term} | {:error, term}
+  @callback start_link(queue(), queue_opts(), message()) ::
+              {:ok, term()} | {:error, term()}
 end

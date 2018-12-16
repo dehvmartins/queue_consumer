@@ -6,9 +6,9 @@ defmodule QueueConsumerTest do
 
   defmodule MessageProcessor do
     @behaviour QueueConsumer.Processor
-    def start_link(queue, opts, {msg_id, _msg}) do
+    def start_link(queue, queue_opts, {msg_id, _msg}) do
       Task.start_link(fn ->
-        queue.mark_as_done(msg_id, opts)
+        queue.mark_as_done(msg_id, queue_opts)
       end)
     end
   end
@@ -18,7 +18,7 @@ defmodule QueueConsumerTest do
       msgs =
         [{"msg_id", "msg"}]
         |> Stream.cycle()
-        |> Enum.take(:rand.uniform(2) - 1)
+        |> Enum.take(:rand.uniform(3) - 1)
 
       {:ok, msgs}
     end
