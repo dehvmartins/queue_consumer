@@ -1,5 +1,6 @@
 # QueueConsumer
 [![Build Status](https://travis-ci.org/sneako/queue_consumer.svg?branch=master)](https://travis-ci.org/sneako/queue_consumer)
+[![Coverage Status](https://coveralls.io/repos/github/sneako/queue_consumer/badge.svg?branch=master)](https://coveralls.io/github/sneako/queue_consumer?branch=master)
 
 Quick and easy way to consume a message queue. Sets up a [GenStage](https://github.com/elixir-lang/gen_stage) Producer with
 a ConsumerSupervisor. All you need to do is implement the `QueueConsumer.Processor` behaviour, and pass in your configuration.
