@@ -32,8 +32,8 @@ defmodule QueueConsumer.MixProject do
 
   defp deps do
     [
-      {:ex_aws, "~> 2.0", override: true},
-      {:ex_aws_sqs, "~> 2.0"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_sqs, github: "ex-aws/ex_aws_sqs", ref: "185ec5b0ffa09ba2ca0f69ec73bda3a23f5c55f3"},
       {:sweet_xml, "~> 0.6"},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.14"},

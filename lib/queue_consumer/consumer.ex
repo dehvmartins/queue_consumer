@@ -6,7 +6,9 @@ defmodule QueueConsumer.Consumer do
   use ConsumerSupervisor
 
   def start_link(args) do
-    ConsumerSupervisor.start_link(__MODULE__, args)
+    ConsumerSupervisor.start_link(__MODULE__, args,
+      name: QueueConsumer.name(args[:name], :queue_consumer_consumer)
+    )
   end
 
   def init(args) do
@@ -25,7 +27,9 @@ defmodule QueueConsumer.Consumer do
 
     opts = [
       strategy: :one_for_one,
-      subscribe_to: [{QueueConsumer.name(args[:name], :producer), max_demand: max_demand}]
+      subscribe_to: [
+        {QueueConsumer.name(args[:name], :queue_consumer_producer), max_demand: max_demand}
+      ]
     ]
 
     ConsumerSupervisor.init(children, opts)

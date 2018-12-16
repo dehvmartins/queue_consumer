@@ -15,24 +15,22 @@ defmodule QueueConsumerTest do
 
   defmodule GenericQueue do
     def dequeue(_opts) do
-      :timer.sleep(30)
       msgs =
-        if :rand.uniform(100) > 30 do
-          [{"msg_id", "msg"}]
-        else
-          []
-        end
+        [{"msg_id", "msg"}]
+        |> Stream.cycle()
+        |> Enum.take(:rand.uniform(2) - 1)
 
       {:ok, msgs}
     end
 
     def mark_as_done(_, self: pid, done_message: msg) do
-      send(pid, msg)
+      Process.send(pid, msg, [])
     end
   end
 
   test "call handle_message function when it receives a message" do
     queues = [
+      name: :first,
       queues: [
         [
           queue_mod: GenericQueue,
@@ -42,13 +40,13 @@ defmodule QueueConsumerTest do
       ]
     ]
 
-    QueueConsumer.start_link(queues)
-
+    assert {:ok, _pid} = QueueConsumer.start_link(queues)
     assert_receive :first_test_complete, @max_wait
   end
 
   test "can start multiple instances as long as they have different names" do
     queues = [
+      name: :second,
       queues: [
         [
           name: :first_queue,
@@ -65,8 +63,7 @@ defmodule QueueConsumerTest do
       ]
     ]
 
-    QueueConsumer.start_link(queues)
-
+    assert {:ok, _pid} = QueueConsumer.start_link(queues)
     assert_receive :first_queue_complete, @max_wait
     assert_receive :second_queue_complete, @max_wait
   end

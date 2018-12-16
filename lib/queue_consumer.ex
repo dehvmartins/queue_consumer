@@ -37,7 +37,7 @@ defmodule QueueConsumer do
   alias QueueConsumer.Consumer
 
   def start_link(args) do
-    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, args, name: args[:name] || __MODULE__)
   end
 
   @impl true
@@ -61,5 +61,5 @@ defmodule QueueConsumer do
   end
 
   def name(nil, type), do: type
-  def name(name, type), do: String.to_atom("#{name}-#{type}")
+  def name(name, type), do: String.to_atom("#{name}_#{type}")
 end

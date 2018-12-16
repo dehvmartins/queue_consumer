@@ -4,7 +4,9 @@ defmodule QueueConsumer.Producer do
   require Logger
 
   def start_link(args) do
-    GenStage.start_link(__MODULE__, args, name: QueueConsumer.name(args[:name], :producer))
+    GenStage.start_link(__MODULE__, args,
+      name: QueueConsumer.name(args[:name], :queue_consumer_producer)
+    )
   end
 
   def init(args) do
