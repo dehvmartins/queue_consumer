@@ -20,25 +20,3 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/queue_consumer](https://hexdocs.pm/queue_consumer).
 
-## Configuration
-
-If you are using the SQS queue adapter, you need to configure :ex_aws like:
-```
-config :ex_aws,
-  access_key_id: MY_KEY,
-  secret_access_key: MY_SECRET
-```
-
-### Queue Configuration
-```
-[
-  queues:
-  [
-    [
-      queue_mod: QueueConsumer.Queue.Sqs,
-      queue_opts: [queue_name: "my-queue-name"],
-      processor_mod: MyApp.MessageProcessor,
-    ]
-  ]
-]
-```
