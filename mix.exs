@@ -15,7 +15,8 @@ defmodule QueueConsumer.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.json": :test,
-        "coveralls.html": :test
+        "coveralls.html": :test,
+        "coveralls.travis": :test
       ]
     ]
   end
