@@ -38,7 +38,6 @@ defmodule QueueConsumer.MixProject do
       {:sweet_xml, "~> 0.6"},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.14"},
-      {:certifi, "~> 2.4"},
       {:excoveralls, "~> 0.8", only: :test},
       {:mox, "~> 0.4.0", only: :test},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
