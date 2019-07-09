@@ -1,3 +1,6 @@
+### Note:
+This was written before https://github.com/plataformatec/broadway existed. You should probably look at that now.
+
 # QueueConsumer
 [![Build Status](https://travis-ci.org/sneako/queue_consumer.svg?branch=master)](https://travis-ci.org/sneako/queue_consumer)
 [![Coverage Status](https://coveralls.io/repos/github/sneako/queue_consumer/badge.svg?branch=master)](https://coveralls.io/github/sneako/queue_consumer?branch=master)
