@@ -64,4 +64,9 @@ defmodule QueueConsumer.Producer do
 
     {:noreply, messages, %{state | demand: new_demand}}
   end
+
+  def handle_info({:ssl_closed, _}, state) do
+    Logger.info("QueueConsumer SSL socket closed")
+    {:noreply, state}
+  end
 end
